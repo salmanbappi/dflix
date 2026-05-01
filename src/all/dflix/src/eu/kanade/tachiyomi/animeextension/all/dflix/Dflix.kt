@@ -209,7 +209,7 @@ class Dflix : AnimeHttpSource() {
 
     override fun relatedAnimeListParse(response: Response): List<SAnime> {
         val document = response.asJsoup()
-        return document.select("div.row:has(h3:contains(Similar)) a, div.row:has(h3:contains(Related)) a, .moviesearchiteam a")
+        return document.select("#movie-related a, div.row:has(h3:contains(Similar)) a, div.row:has(h3:contains(Related)) a, .moviesearchiteam a")
             .map { animeFromElement(it) }
             .filter { it.title != "Unknown" }
             .distinctBy { it.url }
