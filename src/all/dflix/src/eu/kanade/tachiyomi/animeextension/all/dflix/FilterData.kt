@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.animeextension.all.dflix
 object FilterData {
     val MODES = arrayOf(
         "Select Mode...",
+        "TV Series",
         "4K",
         "Genre",
         "Type & Year",

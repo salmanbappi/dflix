@@ -25,25 +25,26 @@ object Filters {
         val modeIndex = if (filters.size > 1) (filters[1] as DflixSelect).state else 0
         return when (modeIndex) {
             0 -> "https://dflix.discoveryftp.net/m/recent/$page"
-            1 -> {
+            1 -> "https://dflix.discoveryftp.net/s/recent/$page"
+            2 -> {
                 val catIndex = if (filters.size > 4) (filters[4] as DflixSelect).state else 0
                 val category = FilterData.CATEGORIES.getOrElse(catIndex) { "Hindi" }
                 "https://dflix.discoveryftp.net/m/uhd/$category/$page"
             }
-            2 -> {
+            3 -> {
                 val genreIndex = if (filters.size > 5) (filters[5] as DflixSelect).state else 0
                 val genre = FilterData.GENRES.getOrElse(genreIndex) { "Action" }
                 "https://dflix.discoveryftp.net/m/genre/$genre/$page"
             }
-            3 -> {
+            4 -> {
                 val catIndex = if (filters.size > 6) (filters[6] as DflixSelect).state else 0
                 val category = FilterData.CATEGORIES.getOrElse(catIndex) { "Hindi" }
                 val yearIndex = if (filters.size > 7) (filters[7] as DflixSelect).state else 0
                 val year = FilterData.YEARS.getOrElse(yearIndex) { "2025" }
                 "https://dflix.discoveryftp.net/m/type/$category/$year/$page"
             }
-            4 -> "https://dflix.discoveryftp.net/m/dual/Hindi/$page"
-            5 -> "https://dflix.discoveryftp.net/m/lan/English/$page"
+            5 -> "https://dflix.discoveryftp.net/m/dual/Hindi/$page"
+            6 -> "https://dflix.discoveryftp.net/m/lan/English/$page"
             else -> "https://dflix.discoveryftp.net/m/recent/$page"
         }
     }
