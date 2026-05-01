@@ -95,8 +95,13 @@ class Dflix : AnimeHttpSource() {
     private fun fixUrl(url: String): String {
         if (url.isBlank()) return url
         val u = url.trim().replace(" ", "%20")
-        if (u.startsWith("http")) return u
+        if (u.startsWith("http")) return highResUrl(u)
         return if (u.startsWith("/")) "$baseUrl$u" else "$baseUrl/$u"
+    }
+
+    private fun highResUrl(url: String): String {
+        // DiscoveryFTP uses /media/{size}/ paths. 55 and 300 are blurry. 500 or 1080 are better.
+        return url.replace(Regex("""/media/\d+/"""), "/media/500/")
     }
 
     override suspend fun getSearchAnime(page: Int, query: String, filters: AnimeFilterList): AnimesPage {
@@ -279,14 +284,14 @@ class Dflix : AnimeHttpSource() {
 
     private fun getMovieDetails(document: Document) = SAnime.create().apply {
         status = SAnime.COMPLETED
-        thumbnail_url = document.selectFirst("figure.movie-detail-banner img")?.attr("abs:src")?.replace(" ", "%20") ?: ""
+        thumbnail_url = highResUrl(document.selectFirst("figure.movie-detail-banner img")?.attr("abs:src")?.replace(" ", "%20") ?: "")
         genre = document.select("div.ganre-wrapper a").joinToString { it.text().replace(",", "").trim() }
         description = document.selectFirst("p.storyline")?.text()?.trim() ?: ""
     }
 
     private fun getSeriesDetails(document: Document) = SAnime.create().apply {
         status = SAnime.ONGOING
-        thumbnail_url = document.selectFirst("div.movie-detail-banner img")?.attr("abs:src")?.replace(" ", "%20") ?: ""
+        thumbnail_url = highResUrl(document.selectFirst("div.movie-detail-banner img")?.attr("abs:src")?.replace(" ", "%20") ?: "")
         genre = document.select("div.ganre-wrapper a").joinToString { it.text().replace(",", "").trim() }
         description = document.selectFirst("p.storyline")?.text()?.trim() ?: ""
     }
