@@ -183,24 +183,36 @@ class Dflix : AnimeHttpSource() {
 
     override fun popularAnimeParse(response: Response): AnimesPage {
         val document = response.asJsoup()
-        val animeList = document.select("div.card a.cfocus, a:has(div.fcard), a:has(div.card), div.moviesearchiteam a").map { element ->
-            val card = element.selectFirst("div.fcard, div.card, div.details") ?: element.parent()
-            SAnime.create().apply {
-                var titleText = card?.selectFirst("div.details h3, div.ftitle, h3, .ftitle")?.text() ?: "Unknown"
-                val poster = element.selectFirst("div.poster, div.fcard, .card, img")
-                if (poster != null) {
-                    val attrTitle = poster.attr("title")
-                    if (attrTitle.contains("4K", ignoreCase = true)) {
-                        titleText += " 4K"
-                    }
-                }
-                title = titleText
-                url = fixUrl(element.attr("href"))
-                thumbnail_url = fixUrl(element.selectFirst("img")?.attr("src") ?: "")
-            }
-        }.filter { it.title != "Unknown" }
+        val animeList = document.select("div.card a.cfocus, a:has(div.fcard), a:has(div.card), div.moviesearchiteam a")
+            .map { animeFromElement(it) }
+            .filter { it.title != "Unknown" }
         
         return AnimesPage(animeList, animeList.isNotEmpty())
+    }
+
+    private fun animeFromElement(element: Element): SAnime {
+        val card = element.selectFirst("div.fcard, div.card, div.details") ?: element.parent()
+        return SAnime.create().apply {
+            var titleText = card?.selectFirst("div.details h3, div.ftitle, h3, .ftitle")?.text() ?: "Unknown"
+            val poster = element.selectFirst("div.poster, div.fcard, .card, img")
+            if (poster != null) {
+                val attrTitle = poster.attr("title")
+                if (attrTitle.contains("4K", ignoreCase = true)) {
+                    titleText += " 4K"
+                }
+            }
+            title = titleText
+            url = fixUrl(element.attr("href"))
+            thumbnail_url = fixUrl(element.selectFirst("img")?.attr("src") ?: "")
+        }
+    }
+
+    override fun relatedAnimeListParse(response: Response): List<SAnime> {
+        val document = response.asJsoup()
+        return document.select("div.row:has(h3:contains(Similar)) a, div.row:has(h3:contains(Related)) a, .moviesearchiteam a")
+            .map { animeFromElement(it) }
+            .filter { it.title != "Unknown" }
+            .distinctBy { it.url }
     }
 
     override fun latestUpdatesRequest(page: Int) = popularAnimeRequest(page)
