@@ -21,5 +21,5 @@ object FilterData {
         "Animation", "Bangla", "English", "Hindi", "Others", "Tamil"
     )
 
-    val YEARS = (2025 downTo 2000).map { it.toString() }.toTypedArray()
+    val YEARS = (2026 downTo 2000).map { it.toString() }.toTypedArray()
 }

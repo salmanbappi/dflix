@@ -40,7 +40,7 @@ object Filters {
                 val catIndex = if (filters.size > 6) (filters[6] as DflixSelect).state else 0
                 val category = FilterData.CATEGORIES.getOrElse(catIndex) { "Hindi" }
                 val yearIndex = if (filters.size > 7) (filters[7] as DflixSelect).state else 0
-                val year = FilterData.YEARS.getOrElse(yearIndex) { "2025" }
+                val year = FilterData.YEARS.getOrElse(yearIndex) { "2026" }
                 "https://dflix.discoveryftp.net/m/type/$category/$year/$page"
             }
             5 -> "https://dflix.discoveryftp.net/m/dual/Hindi/$page"
