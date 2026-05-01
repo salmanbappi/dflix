@@ -189,7 +189,9 @@ class Dflix : AnimeHttpSource() {
             .map { animeFromElement(it) }
             .filter { it.title != "Unknown" }
         
-        return AnimesPage(animeList, animeList.isNotEmpty())
+        val hasNextPage = document.select("a.page-link:contains(Next)").isNotEmpty()
+        
+        return AnimesPage(animeList, hasNextPage)
     }
 
     private fun animeFromElement(element: Element): SAnime {
