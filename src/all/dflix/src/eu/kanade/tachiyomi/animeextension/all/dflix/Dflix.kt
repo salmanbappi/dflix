@@ -12,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
@@ -210,10 +211,47 @@ class Dflix : AnimeHttpSource() {
 
     override fun relatedAnimeListParse(response: Response): List<SAnime> {
         val document = response.asJsoup()
-        return document.select("#movie-related a, div.row:has(h3:contains(Similar)) a, div.row:has(h3:contains(Related)) a, .moviesearchiteam a")
-            .map { animeFromElement(it) }
-            .filter { it.title != "Unknown" }
-            .distinctBy { it.url }
+        val currentUrl = response.request.url.encodedPath
+
+        // 1. Get first 12 cast members
+        val castLinks = document.select("a[href*=/people/index/]")
+            .map { it.attr("abs:href") }
+            .distinct()
+            .take(12)
+
+        if (castLinks.isEmpty()) {
+            // Fallback to basic selector if no cast found
+            return document.select("#movie-related a, div.row:has(h3:contains(Similar)) a, div.row:has(h3:contains(Related)) a, .moviesearchiteam a")
+                .map { animeFromElement(it) }
+                .filter { it.title != "Unknown" }
+                .distinctBy { it.url }
+        }
+
+        // 2. Fetch all cast pages in parallel and aggregate movies they worked on
+        val relatedItems = runBlocking(Dispatchers.IO) {
+            castLinks.map { url ->
+                async {
+                    try {
+                        val personDoc = client.newCall(GET(url, headers)).execute().asJsoup()
+                        personDoc.select("h3:contains(Also Worked On) + div.row a[href*=/view/]")
+                            .map { element ->
+                                animeFromElement(element)
+                            }
+                    } catch (e: Exception) {
+                        emptyList<SAnime>()
+                    }
+                }
+            }.awaitAll().flatten()
+        }
+
+        // 3. Find "similarities" (items that appear most frequently across different cast members)
+        return relatedItems
+            .filter { it.title != "Unknown" && !it.url.contains(currentUrl) }
+            .groupBy { it.url }
+            .toList()
+            .sortedByDescending { it.second.size } // Most common items first
+            .map { it.second.first() } // Unique items
+            .take(24)
     }
 
     override fun latestUpdatesRequest(page: Int) = popularAnimeRequest(page)
