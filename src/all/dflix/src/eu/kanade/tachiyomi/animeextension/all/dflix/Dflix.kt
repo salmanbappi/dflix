@@ -200,7 +200,8 @@ class Dflix : AnimeHttpSource() {
             .map { animeFromElement(it) }
             .filter { it.title != "Unknown" }
         
-        val hasNextPage = document.select("a.page-link:contains(Next)").isNotEmpty()
+        val hasNextPage = document.select("a.page-link:contains(Next)").isNotEmpty() || 
+            (animeList.size >= 20 && !response.request.url.encodedPath.contains("/search"))
         
         return AnimesPage(animeList, hasNextPage)
     }
