@@ -95,13 +95,19 @@ class Dflix : AnimeHttpSource() {
     private fun fixUrl(url: String): String {
         if (url.isBlank()) return url
         val u = url.trim().replace(" ", "%20")
-        if (u.startsWith("http")) return highResUrl(u)
-        return if (u.startsWith("/")) "$baseUrl$u" else "$baseUrl/$u"
+        val fullUrl = if (u.startsWith("http")) u
+        else if (u.startsWith("/")) "$baseUrl$u"
+        else "$baseUrl/$u"
+        return highResUrl(fullUrl)
     }
 
     private fun highResUrl(url: String): String {
-        // DiscoveryFTP uses /media/{size}/ paths. 55 and 300 are blurry. 500 or 1080 are better.
-        return url.replace(Regex("""/media/\d+/"""), "/media/500/")
+        // DiscoveryFTP uses several patterns for images:
+        // 1. imagesX.discoveryftp.net/media/{size}/...
+        // 2. ext-img.discoveryftp.net/{size}//...
+        // 55, 100, 300 are blurry. 1080 is supported across all and is sharp.
+        return url.replace(Regex("""/media/\d+/"""), "/media/1080/")
+            .replace(Regex("""discoveryftp\.net/\d+//"""), "discoveryftp.net/1080//")
     }
 
     override suspend fun getSearchAnime(page: Int, query: String, filters: AnimeFilterList): AnimesPage {
